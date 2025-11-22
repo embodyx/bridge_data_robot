@@ -43,6 +43,7 @@ class WidowXEnv(RobotBaseEnv):
             'move_to_rand_start_freq': 1,
             'fix_zangle': False
         }
+        print('------------------------default hparams update WidowXEnv-------------------------------')
         parent_params = super(WidowXEnv, self)._default_hparams()
         parent_params.update(default_dict)
         return parent_params
@@ -65,8 +66,9 @@ class WidowXEnv(RobotBaseEnv):
                 if itraj % self._hp.move_to_rand_start_freq == 0:
                     self.move_to_startstate()
 
-        self._reset_previous_qpos()
+        self._previous_target_qpos = np.array([0.30, -0.017, 0.200, -0.035, -0.114, 0.031, 2.477])
         obs = self.current_obs()
+        print("previous state: ", self._previous_target_qpos)
         return obs
 
     def move_to_startstate(self, start_state=None):
@@ -77,6 +79,7 @@ class WidowXEnv(RobotBaseEnv):
             start_state = np.array(start_state)
             if start_state.shape[0] == 5:
                 start_state = np.concatenate([start_state[:3], np.zeros(2), start_state[3:]])
+            start_state = np.array([0.30, -0.017, 0.200, -0.035, -0.114, 0.031, 2.477])
             transform, _ = state2transform(start_state, self._controller.default_rot)
             assert isinstance(self._controller, WidowX_Controller)
             successful = False
@@ -86,7 +89,9 @@ class WidowXEnv(RobotBaseEnv):
                     successful = True
                 except Environment_Exception:
                     self.move_to_neutral()
+            self._reset_previous_qpos()
         elif self._hp.start_transform is not None:
+            print('elif')
             path = self._hp.start_transform[0]
             tstep = self._hp.start_transform[1]
             transform = pkl.load(open(path + '/obs_dict.pkl', 'rb'))['eef_transform'][tstep]
@@ -99,6 +104,7 @@ class WidowXEnv(RobotBaseEnv):
                 except Environment_Exception:
                     self.move_to_neutral()
         else:
+            print('else')
             if self._hp.randomize_initpos == 'restricted_space':
                 startpos = np.random.uniform(self._low_bound[:3] + np.array([0, 0, 0.085]),
                                              self._high_bound[:3] - np.array([0, 0.07, 0.01]))
