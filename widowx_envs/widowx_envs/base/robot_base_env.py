@@ -144,8 +144,12 @@ class RobotBaseEnv(BaseEnv):
                         'gripper_params': AttrDict(
                             des_pos_max=1,
                             des_pos_min=0,
+                            
                         )
+                        
         }
+        print('------------------------default hparams update RobotBaseEnv-------------------------------')
+
         parent_params = super(RobotBaseEnv, self)._default_hparams()
         parent_params.update(default_dict)
         return parent_params
@@ -221,7 +225,10 @@ class RobotBaseEnv(BaseEnv):
         if self._hp.action_mode == '3trans':
             action = np.concatenate([action[:3], np.zeros(3), np.array([action[-1]])])  # insert zeros for pitch, roll, yaw
 
+        print('action: ', action)
+        print('previous target pos: ', self._previous_target_qpos)
         new_transform, new_gripperstate = self._next_qpos(action)
+        
 
         # assume that the gripper open state is 1. and the close state is 0.
 
@@ -251,6 +258,7 @@ class RobotBaseEnv(BaseEnv):
         logging.getLogger('robot_logger').info(f'time to set pos {time.time() - t0}')
 
         self._previous_target_qpos = tr.transform2state(new_transform, new_gripperstate, self._controller.default_rot)
+        print('new state: ', self._previous_target_qpos)
         if self._hp.resetqpos_after_every_step:
             self._reset_previous_qpos()  # this can cause accumulating errors
         time.sleep(self._hp.wait_time)
