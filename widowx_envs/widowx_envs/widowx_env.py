@@ -59,6 +59,12 @@ class WidowXEnv(RobotBaseEnv):
         if not self._hp.skip_move_to_neutral:
             self._controller.move_to_neutral(duration=1.5)
 
+        obs = self.current_obs()
+        print("After move to neutral: ")
+        print("State: ", obs['state'])
+        print("Joints: ", obs['joints'])
+        print("Joint effort: ", obs['full_obs']['joint_effort'])
+
         if itraj is None:
             self.move_to_startstate()
         else:
@@ -66,20 +72,27 @@ class WidowXEnv(RobotBaseEnv):
                 if itraj % self._hp.move_to_rand_start_freq == 0:
                     self.move_to_startstate()
 
-        self._previous_target_qpos = np.array([0.30, -0.017, 0.200, -0.035, -0.114, 0.031, 2.477])
+        self._previous_target_qpos = np.array([0.35, -0.017, 0.200, 0, 0, 0, 1])
         obs = self.current_obs()
-        print("previous state: ", self._previous_target_qpos)
+        print("After move to start state: ")
+        print("State: ", obs['state'])
+        print("Joints: ", obs['joints'])
+        print("Joint effort: ", obs['full_obs']['joint_effort'])
+        # print(obs)
+        # print("previous target state: ", self._previous_target_qpos)
         return obs
 
     def move_to_startstate(self, start_state=None):
         if self._hp.start_state is not None or start_state is not None:
+            print("self start state: ", self._hp.start_state)
+            print("start state: ", start_state)
             if start_state is None:
                 start_state = self._hp.start_state
                 # start_state = pkl.load(open(self._hp.start_state + '/obs_dict.pkl', 'rb'))['state'][0]
             start_state = np.array(start_state)
             if start_state.shape[0] == 5:
                 start_state = np.concatenate([start_state[:3], np.zeros(2), start_state[3:]])
-            start_state = np.array([0.30, -0.017, 0.200, -0.035, -0.114, 0.031, 2.477])
+            start_state = np.array([0.35, -0.017, 0.200, 0, 0, 0, 1])
             transform, _ = state2transform(start_state, self._controller.default_rot)
             assert isinstance(self._controller, WidowX_Controller)
             successful = False
@@ -452,6 +465,7 @@ class BridgeDataRailRLPrivateWidowX(WidowXEnv):
             'image_crop_xywh': None,  # can be a tuple like (0, 0, 100, 100)
             # 'camera_topics': [IMTopic('/cam0/image_raw'), IMTopic('/cam1/image_raw'), IMTopic('/cam2/image_raw')],
         }
+        print('------------------------default hparams update BridgeDataRailRLPrivateWidowX-------------------------------')
         parent_params = super()._default_hparams()
         parent_params.update(default_dict)
         return parent_params
